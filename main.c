@@ -121,19 +121,19 @@ int main(int argc, char **argv) {
             return EXIT_FAILURE; \
         }
 #elif defined(_WIN32)
-HMODULE vulkan_library = LoadLibrary(L"vulkan-1.dll");
-if (!vulkan_library) {
-    fprintf(stderr, "Failed to load vulkan-1.dll.\n");
-    return EXIT_FAILURE;
-}
-
-// Load exported functions
-#define EXPORTED_VULKAN_FUNCTION( name ) \
-    name = (PFN_##name)GetProcAddress(vulkan_library, #name); \
-    if( name == NULL ) { \
-        fprintf(stderr, "Could not load exported Vulkan function %s\n", #name); \
-        return EXIT_FAILURE; \
+    HMODULE vulkan_library = LoadLibrary(L"vulkan-1.dll");
+    if (!vulkan_library) {
+        fprintf(stderr, "Failed to load vulkan-1.dll.\n");
+        return EXIT_FAILURE;
     }
+
+    // Load exported functions
+    #define EXPORTED_VULKAN_FUNCTION( name ) \
+        name = (PFN_##name)GetProcAddress(vulkan_library, #name); \
+        if( name == NULL ) { \
+            fprintf(stderr, "Could not load exported Vulkan function %s\n", #name); \
+            return EXIT_FAILURE; \
+        }
 #else
     #error "Unsupported platform"
 #endif

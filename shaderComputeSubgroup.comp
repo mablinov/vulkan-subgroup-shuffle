@@ -1,0 +1,47 @@
+#version 450
+
+// Enable the necessary subgroup extension
+#extension GL_KHR_shader_subgroup_basic : require
+
+// Define the local workgroup size, same as before.
+layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+// The output storage image, same as before.
+layout(set = 0, binding = 0, rgba8) uniform writeonly image2D resultImage;
+
+void main() {
+    // Get the pixel coordinate for this shader invocation.
+    ivec2 storePos = ivec2(gl_GlobalInvocationID.xy);
+
+    // Get the dimensions of the image.
+    ivec2 size = imageSize(resultImage);
+
+    // Boundary check to prevent writing out of bounds.
+    if (storePos.x >= size.x || storePos.y >= size.y) {
+        return;
+    }
+
+    // --- Subgroup Coloring Logic ---
+
+    // gl_SubgroupSize: A built-in variable that gives the number of invocations 
+    // in the current subgroup. This size is determined by the GPU hardware/driver 
+    // and is typically a power of two (e.g., 32 or 64).
+
+    // gl_SubgroupInvocationID: A built-in variable that gives the unique index 
+    // of the current invocation within its subgroup. It ranges from 0 to gl_SubgroupSize - 1.
+
+    // Calculate the red component based on the invocation's ID within its subgroup.
+    // This will create small, repeating horizontal gradients across the image.
+    float r = float(gl_SubgroupInvocationID) / float(gl_SubgroupSize - 1);
+
+    // Use the global Y position for the green component to add some variation.
+    // float g = float(storePos.y) / float(size.y - 1);
+    float g = 0.0;
+    
+    // Set the blue component to visualize the subgroup size. For example, if the
+    // subgroup size is 64, this will be 1.0. If it's 32, it will be 0.5.
+    float b = float(gl_SubgroupSize) / 64.0;
+
+    // Write the final color to the image.
+    imageStore(resultImage, storePos, vec4(r, g, b, 1.0));
+}

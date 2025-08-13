@@ -49,6 +49,7 @@ Write-Host "--- Compiling Vulkan Demo ---"
 
 # Compile the C code, including the Vulkan SDK headers and linking the Vulkan library
 cl.exe main.c /I"$env:VULKAN_SDK\Include" /link /LIBPATH:"$env:VULKAN_SDK\Lib" vulkan-1.lib /OUT:render.exe
+cl.exe compute.c /I"$env:VULKAN_SDK\Include" /link /LIBPATH:"$env:VULKAN_SDK\Lib" vulkan-1.lib /OUT:compute.exe
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host ""
