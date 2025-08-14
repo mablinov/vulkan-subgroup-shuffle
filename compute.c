@@ -136,7 +136,7 @@ int main() {
         .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
         .pEngineName = "No Engine",
         .engineVersion = VK_MAKE_VERSION(1, 0, 0),
-        .apiVersion = VK_API_VERSION_1_1,
+        .apiVersion = VK_API_VERSION_1_2,
     };
     VkInstanceCreateInfo instanceCreateInfo = {
         .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
@@ -200,10 +200,18 @@ int main() {
         .queueCount = 1,
         .pQueuePriorities = &queuePriority,
     };
+
+    // --- NEW: Enable the frame boundary extension ---
+    const char* deviceExtensions[] = {
+        VK_EXT_FRAME_BOUNDARY_EXTENSION_NAME
+    };
+
     VkDeviceCreateInfo deviceCreateInfo = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
         .pQueueCreateInfos = &queueCreateInfo,
         .queueCreateInfoCount = 1,
+        .enabledExtensionCount = 1,
+        .ppEnabledExtensionNames = deviceExtensions,
     };
     VkDevice device;
     VK_CHECK(vkCreateDevice(physicalDevice, &deviceCreateInfo, NULL, &device));
@@ -444,12 +452,29 @@ int main() {
 
     VK_CHECK(vkEndCommandBuffer(commandBuffer));
 
+    // --- NEW: Define the frame boundary info ---
+    VkFrameBoundaryEXT frameBoundaryInfo = {
+        .sType = VK_STRUCTURE_TYPE_FRAME_BOUNDARY_EXT,
+        .pNext = NULL,
+        .flags = VK_FRAME_BOUNDARY_FRAME_END_BIT_EXT, // This single submission is the whole frame
+        .frameID = 1,
+        .imageCount = 1,
+        .pImages = &image,
+        .bufferCount = 0,
+        .pBuffers = NULL,
+        .tagName = 0,
+        .tagSize = 0,
+        .pTag = NULL,
+    };
+
     // Submit to the queue and wait for completion.
     VkSubmitInfo submitInfo = {
         .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+        .pNext = &frameBoundaryInfo, // Chain the frame boundary info
         .commandBufferCount = 1,
         .pCommandBuffers = &commandBuffer,
     };
+
     VkFenceCreateInfo fenceCreateInfo = { .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
     VkFence fence;
     VK_CHECK(vkCreateFence(device, &fenceCreateInfo, NULL, &fence));
